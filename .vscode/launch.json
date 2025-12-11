@@ -1,0 +1,16 @@
+{
+    "version": "1.2.0",
+    "configurations": [
+        {
+            "name": "Debug Gromacs",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${command:cmake.launchTargetPath}",
+            "args": ["mdrun", "-deffnm", "../../../Simulations/aladi_vacuum_for_gromacs/nve"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/build",
+            "externalConsole": false,
+            "MIMode": "gdb"
+        }
+    ]
+}

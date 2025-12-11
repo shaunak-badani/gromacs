@@ -1,0 +1,19 @@
+{
+    "version": 3,
+    "configurePresets": [
+        {
+            "name": "Debug version of Gromacs",
+            "description" : "Settings for debugging Gromacs",
+            "hidden": false,
+            "generator": "Unix Makefiles",
+            "binaryDir": "${workspaceFolder}/build",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "YES",
+                "GMX_MPI": "OFF",
+                "GMX_BUILD_OWN_FFTW": "ON",
+                "REGRESSIONTEST_DOWNLOAD": "OFF"
+            }
+        }
+    ]
+}
