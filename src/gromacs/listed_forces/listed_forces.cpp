@@ -489,6 +489,13 @@ static void calcBondedForces(const InteractionDefinitions&       idef,
                              const gmx::StepWorkload&            stepWork,
                              int*                                global_atom_index)
 {
+    int natoms = fr->natoms_force;
+    std::vector<rvec> collatedForces(natoms);
+    std::vector<rvec> collatedHarmonicForces(natoms);
+    std::vector<rvec> collatedProperDihedralForces(natoms);
+    std::vector<rvec> collatedImproperDihedralForces(natoms);
+    std::vector<rvec> collatedPeriodicImproperDihedralForces(natoms);
+    std::vector<real> epotTotal = std::vector<real>((int)InteractionFunction::Count, 0);
 #pragma omp parallel for num_threads(bt->nthreads) schedule(static)
     for (int thread = 0; thread < bt->nthreads; thread++)
     {
@@ -532,6 +539,14 @@ static void calcBondedForces(const InteractionDefinitions&       idef,
                 if (!ilist.empty() && ftype_is_bonded_potential(ftype))
                 {
                     ArrayRef<const int> iatoms = gmx::makeConstArrayRef(ilist.iatoms);
+                    std::vector<rvec> tmp(natoms);
+
+                    for(int shaunI = 0 ; shaunI < natoms ; shaunI++)
+                    {
+                        tmp[shaunI][0] = ft[shaunI][0];
+                        tmp[shaunI][1] = ft[shaunI][1];
+                        tmp[shaunI][2] = ft[shaunI][2];
+                    }
 
                     real v = calc_one_bond(thread,
                                            ftype,
@@ -556,11 +571,103 @@ static void calcBondedForces(const InteractionDefinitions&       idef,
                                            fcd,
                                            stepWork,
                                            global_atom_index);
+                    for(int shaunI = 0 ; shaunI < natoms ; shaunI++)
+                    {
+                        if(ftype == InteractionFunction::Bonds)
+                        {
+                            collatedForces[shaunI][0] += (ft[shaunI][0] - tmp[shaunI][0]);
+                            collatedForces[shaunI][1] += (ft[shaunI][1] - tmp[shaunI][1]);
+                            collatedForces[shaunI][2] += (ft[shaunI][2] - tmp[shaunI][2]);
+                        }
+                        if(ftype == InteractionFunction::Angles)
+                        {
+                            collatedHarmonicForces[shaunI][0] += (ft[shaunI][0] - tmp[shaunI][0]);
+                            collatedHarmonicForces[shaunI][1] += (ft[shaunI][1] - tmp[shaunI][1]);
+                            collatedHarmonicForces[shaunI][2] += (ft[shaunI][2] - tmp[shaunI][2]);
+                        }
+                        if(ftype == InteractionFunction::ProperDihedrals)
+                        {
+                            collatedProperDihedralForces[shaunI][0] += (ft[shaunI][0] - tmp[shaunI][0]);
+                            collatedProperDihedralForces[shaunI][1] += (ft[shaunI][1] - tmp[shaunI][1]);
+                            collatedProperDihedralForces[shaunI][2] += (ft[shaunI][2] - tmp[shaunI][2]);
+                        }
+                        if(ftype == InteractionFunction::PeriodicImproperDihedrals)
+                        {
+                            collatedPeriodicImproperDihedralForces[shaunI][0] += (ft[shaunI][0] - tmp[shaunI][0]);
+                            collatedPeriodicImproperDihedralForces[shaunI][1] += (ft[shaunI][1] - tmp[shaunI][1]);
+                            collatedPeriodicImproperDihedralForces[shaunI][2] += (ft[shaunI][2] - tmp[shaunI][2]);
+                        }
+                    }
                     (*epot)[ftype] += v;
                 }
             }
         }
         GMX_CATCH_ALL_AND_EXIT_WITH_FATAL_ERROR
+    }
+    static bool wroteOnce = false;
+    if (!wroteOnce)
+    {
+        wroteOnce = true;
+
+        FILE* fp = fopen("bonded_forces.dat", "w");
+        for (int i = 0; i < natoms; i++)
+        {
+            fprintf(fp, "%.8f,%.8f,%.8f\n",
+                    collatedForces[i][0],
+                    collatedForces[i][1],
+                    collatedForces[i][2]);
+        }
+        fclose(fp);
+        fp = fopen("angle_forces.dat", "w");
+        for (int i = 0; i < natoms; i++)
+        {
+            fprintf(fp, "%.8f,%.8f,%.8f\n",
+                    collatedHarmonicForces[i][0],
+                    collatedHarmonicForces[i][1],
+                    collatedHarmonicForces[i][2]);
+        }
+        fclose(fp);
+        fp = fopen("proper_dihedral_forces.dat", "w");
+        for (int i = 0; i < natoms; i++)
+        {
+            fprintf(fp, "%.8f,%.8f,%.8f\n",
+                    collatedProperDihedralForces[i][0],
+                    collatedProperDihedralForces[i][1],
+                    collatedProperDihedralForces[i][2]);
+        }
+        fclose(fp);
+        fp = fopen("improper_dihedral_forces.dat", "w");
+        for (int i = 0; i < natoms; i++)
+        {
+            fprintf(fp, "%.8f,%.8f,%.8f\n",
+                    collatedImproperDihedralForces[i][0],
+                    collatedImproperDihedralForces[i][1],
+                    collatedImproperDihedralForces[i][2]);
+        }
+        fclose(fp);
+        fp = fopen("periodic_improper_dihedral_forces.dat", "w");
+        for (int i = 0; i < natoms; i++)
+        {
+            fprintf(fp, "%.8f,%.8f,%.8f\n",
+                    collatedPeriodicImproperDihedralForces[i][0],
+                    collatedPeriodicImproperDihedralForces[i][1],
+                    collatedPeriodicImproperDihedralForces[i][2]);
+        }
+        fclose(fp);
+        fp = fopen("energies.dat", "w");
+
+        /* WRITING ENERGIES TO FILE */
+        for (int ftype = 0; (ftype < (int)InteractionFunction::Count); ftype++)
+        {
+            float totPotFtype = epotTotal[ftype];
+            if(totPotFtype != 0)
+            {
+                fprintf(fp, "%d,%.8f\n",
+                    ftype,totPotFtype);
+            }
+        }
+        fclose(fp);
+
     }
 }
 
