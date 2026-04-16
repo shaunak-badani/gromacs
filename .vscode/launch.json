@@ -6,7 +6,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${command:cmake.launchTargetPath}",
-            "args": ["mdrun", "-deffnm", "../../../Simulations/aladi_vacuum_for_gromacs/nve"],
+            "args": ["mdrun", "-ntomp", "1","-deffnm", "../../../AutoMD/src/test_systems/alanine_dipeptide_vacuum/nve"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/build",
             "externalConsole": false,

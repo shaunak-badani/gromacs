@@ -573,29 +573,30 @@ static void calcBondedForces(const InteractionDefinitions&       idef,
                                            global_atom_index);
                     for(int shaunI = 0 ; shaunI < natoms ; shaunI++)
                     {
+                        int shaunActualIndex = global_atom_index[shaunI];
                         if(ftype == InteractionFunction::Bonds)
                         {
-                            collatedForces[shaunI][0] += (ft[shaunI][0] - tmp[shaunI][0]);
-                            collatedForces[shaunI][1] += (ft[shaunI][1] - tmp[shaunI][1]);
-                            collatedForces[shaunI][2] += (ft[shaunI][2] - tmp[shaunI][2]);
+                            collatedForces[shaunActualIndex][0] += (ft[shaunI][0] - tmp[shaunI][0]);
+                            collatedForces[shaunActualIndex][1] += (ft[shaunI][1] - tmp[shaunI][1]);
+                            collatedForces[shaunActualIndex][2] += (ft[shaunI][2] - tmp[shaunI][2]);
                         }
                         if(ftype == InteractionFunction::Angles)
                         {
-                            collatedHarmonicForces[shaunI][0] += (ft[shaunI][0] - tmp[shaunI][0]);
-                            collatedHarmonicForces[shaunI][1] += (ft[shaunI][1] - tmp[shaunI][1]);
-                            collatedHarmonicForces[shaunI][2] += (ft[shaunI][2] - tmp[shaunI][2]);
+                            collatedHarmonicForces[shaunActualIndex][0] += (ft[shaunI][0] - tmp[shaunI][0]);
+                            collatedHarmonicForces[shaunActualIndex][1] += (ft[shaunI][1] - tmp[shaunI][1]);
+                            collatedHarmonicForces[shaunActualIndex][2] += (ft[shaunI][2] - tmp[shaunI][2]);
                         }
                         if(ftype == InteractionFunction::ProperDihedrals)
                         {
-                            collatedProperDihedralForces[shaunI][0] += (ft[shaunI][0] - tmp[shaunI][0]);
-                            collatedProperDihedralForces[shaunI][1] += (ft[shaunI][1] - tmp[shaunI][1]);
-                            collatedProperDihedralForces[shaunI][2] += (ft[shaunI][2] - tmp[shaunI][2]);
+                            collatedProperDihedralForces[shaunActualIndex][0] += (ft[shaunI][0] - tmp[shaunI][0]);
+                            collatedProperDihedralForces[shaunActualIndex][1] += (ft[shaunI][1] - tmp[shaunI][1]);
+                            collatedProperDihedralForces[shaunActualIndex][2] += (ft[shaunI][2] - tmp[shaunI][2]);
                         }
                         if(ftype == InteractionFunction::PeriodicImproperDihedrals)
                         {
-                            collatedPeriodicImproperDihedralForces[shaunI][0] += (ft[shaunI][0] - tmp[shaunI][0]);
-                            collatedPeriodicImproperDihedralForces[shaunI][1] += (ft[shaunI][1] - tmp[shaunI][1]);
-                            collatedPeriodicImproperDihedralForces[shaunI][2] += (ft[shaunI][2] - tmp[shaunI][2]);
+                            collatedPeriodicImproperDihedralForces[shaunActualIndex][0] += (ft[shaunI][0] - tmp[shaunI][0]);
+                            collatedPeriodicImproperDihedralForces[shaunActualIndex][1] += (ft[shaunI][1] - tmp[shaunI][1]);
+                            collatedPeriodicImproperDihedralForces[shaunActualIndex][2] += (ft[shaunI][2] - tmp[shaunI][2]);
                         }
                     }
                     (*epot)[ftype] += v;
